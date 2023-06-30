@@ -6,6 +6,7 @@
 
 #include "chat.h"
 
+// envia mensagem para o socket descritor
 void send_message(int sd, int server_sd, int sala_id, int cliente_id) {
     printf("Enviando mensagem do file descriptor %d para a sala %d\n", sd, sala_id);
     for (int j = 0; j <= fdmax; j++)
@@ -19,12 +20,12 @@ void send_message(int sd, int server_sd, int sala_id, int cliente_id) {
             }
 }
 
-
-void exit_chat_room(int sd, int sala_id, int cliente_id, int retirar_master) {
+// remove o descriptor da sala e da master
+void exit_chat_room(int sd, int sala_id, int cliente_id, int remover) {
     salas[sala_id].clientes[cliente_id].status = 0;
     salas[sala_id].quantidade--;
     
-    if (retirar_master == 1){
+    if (remover == 1){
         FD_CLR(sd, &master);
     }
     
@@ -36,6 +37,7 @@ void exit_chat_room(int sd, int sala_id, int cliente_id, int retirar_master) {
     printf("O file descriptor %d saiu da sala %d\n", sd, sala_id);
 }
 
+// cria salas 
 int create_chat_room(int limite) {
     int sala;
     for (sala = 0; sala < MAX_SALAS; sala++)
@@ -45,14 +47,14 @@ int create_chat_room(int limite) {
     salas[sala].status = 1;
     salas[sala].limite = limite;
     salas[sala].clientes = malloc(limite * sizeof(cliente));
-    for (int i = 0; i < limite; i++)
+    for (int i = 0; i < limite; i++){
         salas[sala].clientes[i].status = 0;
-
+    }
     printf("A sala %d foi criada com sucesso\n", sala);
     return sala;
 }
 
-
+// insere novo integrante no bate-papo
 void insert_chat_room(int sd, int sala_id, char nome[], int tam_nome) {
     printf("File descriptor %d entrando na sala %d\n", sd, sala_id);
     FD_SET(sd, &salas[sala_id].sala_fd);
@@ -67,6 +69,7 @@ void insert_chat_room(int sd, int sala_id, char nome[], int tam_nome) {
     }
 }
 
+// trata os comandos para: sair, trocar de sala, ou listar integrantes da sala
 void control(int sd, int sala_id, int cliente_id) {
     buf[strlen(buf) - 2] = '\0';
     printf("Comando \"%s\" acionado na sala %d pelo file descriptor %d\n", buf, sd, sala_id);
@@ -80,8 +83,8 @@ void control(int sd, int sala_id, int cliente_id) {
         exit_chat_room(sd, sala_id, cliente_id, 1);
     }
 
-    if (strncmp(buf+1, "listar", 6) == 0) {
-        send(sd, "\nClientes conectados na sala: ", 40, 0);
+    if (strncmp(buf+1, "integrantes_conectados", 22) == 0) {
+        send(sd, "\nIntegrantes conectados na sala:", 31, 0);
         for (int i = 0; i < salas[sala_id].limite; i++) {
             cliente c = salas[sala_id].clientes[i];
             if (c.status == 1 && c.cliente_sd != sd) {
@@ -99,7 +102,7 @@ void control(int sd, int sala_id, int cliente_id) {
         send(sd, "\n\n", 2, 0);
     }
 
-    if (strncmp(buf+1, "trocar_sala", 11) == 0) {
+    if (strncmp(buf+1, "trocar_de_sala", 14) == 0) {
         recv(sd, buf, 256, 0);
         int nova_sala = atoi(buf);
         char nome[256];
@@ -109,6 +112,7 @@ void control(int sd, int sala_id, int cliente_id) {
     }
 }
 
+// inicia servidor
 void init_server() {
     for (int i = 0; i < MAX_SALAS; i++) {
         FD_ZERO(&salas[i].sala_fd);
@@ -189,7 +193,7 @@ int main(int argc, char *argv[]) {
                             break;
 
                     if (nbytes == 0) {
-                        printf("Desconectando o file descriptor %d\n", i);
+                        printf("Desconectando fd: %d\n", i);
                         exit_chat_room(i, sala_id, cliente_id, 1);
                     }
 

@@ -33,7 +33,7 @@ sala salas[MAX_SALAS];
 
 void init_server();
 void send_message(int sd, int server_sd, int sala_id, int cliente_id);
-void exit_chat_room(int sd, int sala_id, int cliente_id, int retirar_master);
+void exit_chat_room(int sd, int sala_id, int cliente_id, int sair);
 int create_chat_room(int limite);
 void insert_chat_room(int sd, int sala_id, char nome[], int tam_nome);
 void control(int sd, int sala_id, int cliente_id);
