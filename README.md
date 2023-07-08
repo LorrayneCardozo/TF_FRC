@@ -1,5 +1,5 @@
 # Fundamentos de Redes de Computadores (FRC) - 2023/1
-## Trabalho Final
+## Chat
 <hr>
 
 ## Alunos
